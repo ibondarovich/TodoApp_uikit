@@ -6,8 +6,19 @@
 //
 
 import Foundation
+import UIKit
 
 enum Category: String, CaseIterable {
     case work = "Work", study = "Study", excercise = "Excercise"
 
+    var color: UIColor {
+        switch self {
+        case .work:
+            return UIColor.workColor
+        case .excercise:
+            return UIColor.excercise
+        case .study:
+            return UIColor.studyColor
+        }
+    }
 }
