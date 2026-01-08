@@ -15,7 +15,9 @@ class TaskTableViewCell: UITableViewCell {
     @IBOutlet weak var categoryLabel: UILabel!
     @IBOutlet weak var captionLabel: UILabel!
     @IBOutlet weak var dateLabel: UILabel!
-    @IBOutlet weak var isComplete: UIImageView!
+    @IBOutlet weak var isCompleteButton: UIButton!
+    private var task: Task?
+    private weak var taskTableViewCellDelegate: TaskTableViewCellDelegate?
     
     private var dateFormatter: DateFormatter {
         let dateFormatter = DateFormatter()
@@ -33,12 +35,15 @@ class TaskTableViewCell: UITableViewCell {
         containerView.clipsToBounds = true
     }
     
-    func configure(withTask task: Task) {
+    func configure(withTask task: Task, taskTableViewCellDelegate: TaskTableViewCellDelegate?) {
         categoryLabel.text = task.category.rawValue
         captionLabel.text = task.description
-        isComplete.image = task.isCompleted ? UIImage(systemName: "checkmark.circle") : UIImage(systemName: "circle")
+        isCompleteButton.setImage(task.isCompleted ? UIImage(systemName: "checkmark.circle") : UIImage(systemName: "circle"), for: .normal)
         dateLabel.text = dateFormatter.string(from: task.createdDate)
         selectionStyle = .none
+        
+        self.task = task
+        self.taskTableViewCellDelegate = taskTableViewCellDelegate
     }
 
     override func setSelected(_ selected: Bool, animated: Bool) {
@@ -46,5 +51,11 @@ class TaskTableViewCell: UITableViewCell {
 
         // Configure the view for the selected state
     }
-
+    @IBAction func completedToggleTapped(_ sender: Any) {
+        guard let task = task else {
+            return
+        }
+        
+        taskTableViewCellDelegate?.markTask(id: task.id, isComplete: !task.isCompleted)
+    }
 }

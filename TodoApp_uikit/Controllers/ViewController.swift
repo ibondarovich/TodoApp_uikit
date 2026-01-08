@@ -78,9 +78,16 @@ extension ViewController: UITableViewDataSource {
         let task = tasks[indexPath.row]
         let cell = tableView.dequeueReusableCell(withIdentifier: TaskTableViewCell.id, for: indexPath) as! TaskTableViewCell
         
-        cell.configure(withTask: task)
+        cell.configure(withTask: task, taskTableViewCellDelegate: self)
         
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            tasks.remove(at: indexPath.row)
+            tableView.deleteRows(at: [indexPath], with: .automatic)
+        }
     }
 }
 
@@ -95,5 +102,20 @@ extension ViewController: UITableViewDelegate {
         
         
         present(newTaskViewController, animated: true)
+    }
+}
+
+extension ViewController: TaskTableViewCellDelegate {
+    func markTask(id: String, isComplete: Bool) {
+        let index = tasks.firstIndex(where:  {$0.id == id}) // tasks.firstIndex { task in task.id == id}
+        
+        guard let index = index else {
+            return
+        }
+        
+        var task = tasks[index]
+        task = Task(id: task.id, category: task.category, description: task.description, createdDate: task.createdDate, isCompleted: isComplete)
+        tasks[index] = task
+        tableView.reloadData()
     }
 }
