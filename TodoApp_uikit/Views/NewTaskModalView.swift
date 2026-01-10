@@ -10,11 +10,12 @@ import UIKit
 class NewTaskModalView: UIView {
     @IBOutlet private weak var descriptionTextView: UITextView!
     @IBOutlet private weak var categoryPickerView: UIPickerView!
-    @IBOutlet private weak var submitButton: UIButton!
+    @IBOutlet weak var submitButton: RoundedButton!
     @IBOutlet private var contentView: UIView!
     
     private var task: Task?
-    
+    private var traitObserver: UITraitChangeRegistration?
+
     weak var newTaskDelegate: NewTaskDelegate?
     var onSubmit: ((Task) -> Void)?
     
@@ -41,6 +42,13 @@ class NewTaskModalView: UIView {
         initSubviews()
     }
     
+    @MainActor
+    deinit {
+        if let traitObserver {
+            unregisterForTraitChanges(traitObserver)
+        }
+    }
+    
     func initSubviews() {
         let nib = UINib(nibName: "NewTaskModalView", bundle: nil)
         nib.instantiate(withOwner: self)
@@ -55,7 +63,7 @@ class NewTaskModalView: UIView {
         
         if let task = task {
             descriptionTextView.text = task.description
-            descriptionTextView.textColor = UIColor.black
+            descriptionTextView.textColor = self.traitCollection.userInterfaceStyle == .dark ? UIColor.white : UIColor.black
             if let rowIndex = Category.allCases.firstIndex(of: task.category) {
                 categoryPickerView.selectRow(rowIndex, inComponent: 0, animated: false)
             }
@@ -66,11 +74,21 @@ class NewTaskModalView: UIView {
         }
                 
         contentView.frame = bounds
+        setupTraitObserver()
+        
         addSubview(contentView)
     }
     
     override func layoutSubviews() {
         contentView.layer.cornerRadius = 10
+    }
+    
+    private func setupTraitObserver() {
+        traitObserver = registerForTraitChanges([UITraitUserInterfaceStyle.self], handler: { (self: Self, previousTraitCollection: UITraitCollection) in
+            if self.traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
+                self.descriptionTextView.textColor = self.traitCollection.userInterfaceStyle == .dark ? UIColor.white : UIColor.black
+            }
+        })
     }
     
     @IBAction func closeButtonTapped(_ sender: Any) {
@@ -101,7 +119,7 @@ extension NewTaskModalView: UITextViewDelegate {
     func textViewDidBeginEditing(_ textView: UITextView) {
         if textView.textColor == .lightGray {
             textView.text = nil
-            textView.textColor = .black
+            textView.textColor = self.traitCollection.userInterfaceStyle == .dark ? UIColor.white : UIColor.black
         }
     }
     

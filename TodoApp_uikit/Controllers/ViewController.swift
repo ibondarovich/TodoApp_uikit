@@ -66,6 +66,10 @@ class ViewController: UIViewController {
         
         present(newTaskViewController, animated: true)
     }
+    
+    @IBAction func settingsButtonTapped(_ sender: Any) {
+        performSegue(withIdentifier: "SettingsSegue", sender: nil)
+    }
 }
 
 
