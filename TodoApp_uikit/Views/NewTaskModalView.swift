@@ -62,7 +62,7 @@ class NewTaskModalView: UIView {
         categoryPickerView.delegate = self
         
         if let task = task {
-            descriptionTextView.text = task.description
+            descriptionTextView.text = task.caption
             descriptionTextView.textColor = self.traitCollection.userInterfaceStyle == .dark ? UIColor.white : UIColor.black
             if let rowIndex = Category.allCases.firstIndex(of: task.category) {
                 categoryPickerView.selectRow(rowIndex, inComponent: 0, animated: false)
@@ -103,11 +103,11 @@ class NewTaskModalView: UIView {
         let category = Category.allCases[selectedRow]
         
         if let task = task {
-            let task = Task(id: task.id, category: category, description: caption, createdDate: task.createdDate, isCompleted: task.isCompleted)
+            let task = Task(id: task.id, category: category, caption: caption, createdDate: task.createdDate, isCompleted: task.isCompleted)
             onSubmit?(task)
         } else {
             let id = UUID().uuidString
-            let task = Task(id: id, category: category, description: caption, createdDate: Date(), isCompleted: false)
+            let task = Task(id: id, category: category, caption: caption, createdDate: Date(), isCompleted: false)
             onSubmit?(task)
         }
         

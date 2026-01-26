@@ -6,11 +6,13 @@
 //
 
 import UIKit
+import RealmSwift
 
 class ViewController: UIViewController {
 
     @IBOutlet weak var titleView: UIView!
     @IBOutlet weak var tableView: UITableView!
+    let realm = try! Realm()
     
     var tasks: [Task] = []
     
@@ -41,6 +43,15 @@ class ViewController: UIViewController {
         
        
         view.addSubview(addButton)
+        
+        let localTasks = realm.objects(LocalTask.self)
+        for localTask in localTasks {
+            let task = Task(id: localTask._id, category: localTask.category, caption: localTask.caption, createdDate: localTask.createdDate, isCompleted: localTask.isCompleted)
+            
+            tasks.append(task)
+        }
+        
+        tableView.reloadData()
     }
     
     override func viewDidLayoutSubviews() {
@@ -62,6 +73,22 @@ class ViewController: UIViewController {
         newTaskViewController.configure { [weak self] task in
             self?.tasks.append(task)
             self?.tableView.reloadData()
+            
+            let localTask = LocalTask()
+            localTask._id = task.id
+            localTask.caption = task.caption
+            localTask.createdDate = task.createdDate
+            localTask.isCompleted = task.isCompleted
+            localTask.category = task.category
+            
+            do {
+                try self?.realm.write {
+                    self?.realm.add(localTask)
+                }
+            } catch let error as NSError {
+                let alertController = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
+                self?.present(alertController, animated: true, completion: nil)
+            }
         }
         
         present(newTaskViewController, animated: true)
@@ -89,8 +116,21 @@ extension ViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
+            let task = tasks[indexPath.row]
             tasks.remove(at: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .automatic)
+            
+            do {
+                let localTask = realm.object(ofType: LocalTask.self, forPrimaryKey: task.id)
+                try realm.write {
+                    if let localTask = localTask {
+                        realm.delete(localTask)
+                    }
+                }
+            } catch let error as NSError {
+                let alertController = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
+                present(alertController, animated: true, completion: nil)
+            }
         }
     }
 }
@@ -102,6 +142,20 @@ extension ViewController: UITableViewDelegate {
         newTaskViewController.configure { [weak self] task in
             self?.tasks[indexPath.row] = task
             self?.tableView.reloadData()
+            
+            let localTask = self?.realm.object(ofType: LocalTask.self, forPrimaryKey: task.id)
+            if let localTask = localTask {
+                do {
+                    try self?.realm.write {
+                        localTask.caption = task.caption
+                        localTask.isCompleted = task.isCompleted
+                        localTask.category = task.category
+                    }
+                } catch let error as NSError {
+                    let alertController = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
+                    self?.present(alertController, animated: true, completion: nil)
+                }
+            }
         }
         
         
@@ -118,7 +172,7 @@ extension ViewController: TaskTableViewCellDelegate {
         }
         
         var task = tasks[index]
-        task = Task(id: task.id, category: task.category, description: task.description, createdDate: task.createdDate, isCompleted: isComplete)
+        task = Task(id: task.id, category: task.category, caption: task.caption, createdDate: task.createdDate, isCompleted: isComplete)
         tasks[index] = task
         tableView.reloadData()
     }

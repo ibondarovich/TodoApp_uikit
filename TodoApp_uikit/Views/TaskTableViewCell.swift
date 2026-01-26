@@ -43,7 +43,7 @@ class TaskTableViewCell: UITableViewCell {
         
         
         categoryLabel.text = task.category.rawValue
-        captionLabel.text = task.description
+        captionLabel.text = task.caption
         isCompleteButton.setImage(task.isCompleted ? UIImage(systemName: "checkmark.circle") : UIImage(systemName: "circle"), for: .normal)
         dateLabel.text = dateFormatter.string(from: task.createdDate)
         selectionStyle = .none
